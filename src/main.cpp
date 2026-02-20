@@ -7,7 +7,7 @@ std::vector<std::string> read_lines (const std::string& path) {
     std::ifstream fin (path);
     std::vector<std::string> lines;
 
-    for (std::string line; std::getline (fin, line);) lines.push_back (line);
+    for (std::string line; !fin.eof (); lines.push_back (line)) std::getline (fin, line);
 
     return lines;
 }
