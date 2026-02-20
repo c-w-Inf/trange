@@ -37,6 +37,10 @@ int main () {
 
                 auto origin = trans.at ("org").get_string ();
                 auto row = trans.at ("row").get_number ().get_int () - 1;
+                if (row >= lines.size ()) {
+                    std::cout << "row out of bounds for file " << file_path << " , skipping this trange" << std::endl;
+                    continue;
+                }
 
                 const auto& trraw = trans.at ("trans").get_string ();
                 auto trrlen = trraw.length ();
@@ -52,12 +56,19 @@ int main () {
                     translated.append (trraw, pos, tpos - pos);
                     tpos += 3;
 
-                    pos = trraw.find (')');
+                    pos = trraw.find (')', tpos);
                     if (pos == std::string::npos) {
                         std::cout << "trans pattern incorrect: " << trraw << " , skipping this trange" << std::endl;
                         goto discard;
                     }
-                    translated += cons.at (trraw.substr (tpos, pos - tpos)).get_string ();
+                    auto cons_str = trraw.substr (tpos, pos - tpos);
+                    if (auto it = cons.find (cons_str); it != cons.end ()) {
+                        translated += it->second.get_string ();
+                    } else {
+                        std::cout << "constant pattern not found: " << cons_str << " , skipping this trange"
+                                  << std::endl;
+                        goto discard;
+                    }
                 }
 
                 size_t col;
