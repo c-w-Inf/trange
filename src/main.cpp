@@ -74,7 +74,7 @@ int main () {
                 size_t col;
                 if (auto it = trans.find ("col"); it != trans.end ()) {
                     col = it->second.get_number ().get_int () - 1;
-                    if (lines[row].length () < col + origin.length ()) {
+                    if (lines[row].compare (col, origin.length (), origin.data ()) != 0) {
                         std::cout << "origin pattern not matched: " << origin << " , skipping this trange" << std::endl;
                         goto discard;
                     }
@@ -83,6 +83,9 @@ int main () {
                     if (col == std::string::npos) {
                         std::cout << "origin pattern not found: " << origin << " , skipping this trange" << std::endl;
                         goto discard;
+                    } else if (lines[row].find (origin, col + 1) != std::string::npos) {
+                        std::cout << "origin pattern appears more than once: " << origin
+                                  << " , picking the first pattern" << std::endl;
                     }
                 }
 
