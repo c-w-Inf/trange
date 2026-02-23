@@ -7,14 +7,17 @@ std::vector<std::string> read_lines (const std::string& path) {
     std::ifstream fin (path);
     std::vector<std::string> lines;
 
-    for (std::string line; !fin.eof (); lines.push_back (line)) std::getline (fin, line);
+    for (std::string line; !fin.eof (); lines.push_back (std::move (line))) {
+        if (!lines.empty ()) lines.back () += '\n';
+
+        std::getline (fin, line);
+    }
 
     return lines;
 }
 void save_lines (const std::string& path, const std::vector<std::string>& lines) {
     std::ofstream fout (path);
-    for (size_t i = 0; i < lines.size () - 1; ++i) fout << lines[i] << '\n';
-    fout << lines[lines.size () - 1];
+    for (const auto& line : lines) fout << line;
 }
 
 int main () {
@@ -41,6 +44,7 @@ int main () {
                     std::cout << "row out of bounds for file " << file_path << " , skipping this trange" << std::endl;
                     continue;
                 }
+                auto& line = lines[row];
 
                 const auto& trraw = trans.at ("trans").get_string ();
                 auto trrlen = trraw.length ();
@@ -74,22 +78,26 @@ int main () {
                 size_t col;
                 if (auto it = trans.find ("col"); it != trans.end ()) {
                     col = it->second.get_number ().get_int () - 1;
-                    if (lines[row].compare (col, origin.length (), origin.data ()) != 0) {
+                    if (line.compare (col, origin.length (), origin.data ()) != 0) {
                         std::cout << "origin pattern not matched: " << origin << " , skipping this trange" << std::endl;
                         goto discard;
                     }
                 } else {
-                    col = lines[row].find (origin);
+                    col = line.find (origin);
                     if (col == std::string::npos) {
                         std::cout << "origin pattern not found: " << origin << " , skipping this trange" << std::endl;
                         goto discard;
-                    } else if (lines[row].find (origin, col + 1) != std::string::npos) {
+                    } else if (line.find (origin, col + 1) != std::string::npos) {
                         std::cout << "origin pattern appears more than once: " << origin
                                   << " , picking the first pattern" << std::endl;
                     }
                 }
 
-                tranges[row][col] = {origin.length (), translated};
+                if (auto it = trans.find ("break"); it != trans.end ()) {
+                    tranges[row][col] = {line.length () - col, translated};
+                } else {
+                    tranges[row][col] = {origin.length (), translated};
+                }
 
             discard:
                 continue;
