@@ -35,11 +35,14 @@ int main () {
 
             std::vector<std::map<size_t, std::pair<size_t, std::string>, std::greater<size_t>>> tranges (lines.size ());
 
+            size_t row = 0;
             for (const auto& trans_json : file) {
                 const auto& trans = trans_json.get_object ();
 
                 auto origin = trans.at ("org").get_string ();
-                auto row = trans.at ("row").get_number ().get_int () - 1;
+                if (auto it = trans.find ("row"); it != trans.end ()) {
+                    row = it->second.get_number ().get_int () - 1;
+                }
                 if (row >= lines.size ()) {
                     std::cout << "row out of bounds for file " << file_path << " , skipping this trange" << std::endl;
                     continue;
@@ -106,7 +109,7 @@ int main () {
                 }
 
             discard:
-                continue;
+                ++row;
             }
 
             for (size_t row = 0; row < lines.size (); ++row) {
