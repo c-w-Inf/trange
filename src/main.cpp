@@ -94,7 +94,13 @@ int main () {
                 }
 
                 if (auto it = trans.find ("break"); it != trans.end ()) {
-                    tranges[row][col] = {line.length () - col, translated};
+                    if (it->second == "begin") {
+                        tranges[row][0] = {col + origin.length (), translated};
+                    } else if (it->second == "end") {
+                        tranges[row][col] = {line.length () - col, translated};
+                    } else {
+                        tranges[row][0] = {line.length (), translated};
+                    }
                 } else {
                     tranges[row][col] = {origin.length (), translated};
                 }
